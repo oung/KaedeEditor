@@ -127,6 +127,14 @@ AddrInfoEx Find_Addr_SendPacket(Frost &f) {
 		}
 	}
 
+	if (GetCFlag() & CF_VS2008) {
+		res = f.AobScan(L"55 8B EC 6A FF 68 ?? ?? ?? ?? 64 A1 00 00 00 00 50 83 EC ?? 53 56 57 A1 ?? ?? ?? ?? 33 C5 50 8D 45 F4 64 A3 00 00 00 00 89 4D ?? 6A 00 E9");
+		if (res.VA) {
+			mode = L"GMS v126.1";
+			return aix;
+		}
+	}
+
 	return aix;
 }
 
@@ -458,6 +466,14 @@ AddrInfoEx Find_Addr_Decode1(Frost &f) {
 		}
 	}
 
+	if (GetCFlag() & CF_VS2008) {
+		res = f.AobScan(L"55 8B EC 6A FF 68 ?? ?? ?? ?? 64 A1 00 00 00 00 50 83 EC ?? 53 56 57 A1 ?? ?? ?? ?? 33 C5 50 8D 45 ?? 64 A3 00 00 00 00 89 65 ?? 89 4D ?? 8B 51 18 8B 41 0C 8B 71 08 2B C2 C7 45 ?? 00 00 00 00 83 F8 01 73 ?? 68");
+		if (res.VA) {
+			mode = L"GMS v126.1";
+			return aix;
+		}
+	}
+
 	return aix;
 }
 
@@ -542,6 +558,14 @@ AddrInfoEx Find_Addr_Decode4(Frost &f) {
 		}
 	}
 
+	if (GetCFlag() & CF_VS2008) {
+		res = f.AobScan(L"55 8B EC 6A FF 68 ?? ?? ?? ?? 64 A1 00 00 00 00 50 83 EC ?? 53 56 57 A1 ?? ?? ?? ?? 33 C5 50 8D 45 ?? 64 A3 00 00 00 00 89 65 ?? 89 4D ?? 8B 51 18 8B 41 0C 8B 71 08 2B C2 C7 45 ?? 00 00 00 00 83 F8 04 73 ?? 68");
+		if (res.VA) {
+			mode = L"GMS v126.1";
+			return aix;
+		}
+	}
+
 	return aix;
 }
 
@@ -582,6 +606,14 @@ AddrInfoEx Find_Addr_DecodeStr(Frost &f) {
 		}
 	}
 
+	if (GetCFlag() & CF_VS2008) {
+		res = f.AobScan(L"55 8B EC 6A FF 68 ?? ?? ?? ?? 64 A1 00 00 00 00 50 83 EC ?? 53 56 57 A1 ?? ?? ?? ?? 33 C5 50 8D 45 ?? 64 A3 00 00 00 00 89 65 ?? 8B F1 89 75 ?? C7 45 ?? 00 00 00 00 8B 7D 08 B8 01 00 00 00 89 45 ?? C7 07 00 00 00 00 8B 56 0C 8B 4E 08 89 45 ?? 8B 46 18 2B D0 52 03 C1 50 57 E8 ?? ?? ?? ?? 83 C4 0C 01 46 18");
+		if (res.VA) {
+			mode = L"GMS v126.1";
+			return aix;
+		}
+	}
+
 	return aix;
 }
 
@@ -618,6 +650,14 @@ AddrInfoEx Find_Addr_DecodeBuffer(Frost &f) {
 		res = f.AobScan(L"6A 10 B8 ?? ?? ?? ?? E8 ?? ?? ?? ?? 8B F1 89 75 EC 0F B7 56 0C 8B 46 14 8B 4E 08 83 65 FC 00 2B D0 52 03 C1 50 FF 75 0C FF 75 08 E8 ?? ?? ?? ?? 83 C4 10 01 46 14 E8 ?? ?? ?? ?? C2 08 00");
 		if (res.VA) {
 			mode = L"TWMS v122.1";
+			return aix;
+		}
+	}
+
+	if (GetCFlag() & CF_VS2008) {
+		res = f.AobScan(L"55 8B EC 6A FF 68 ?? ?? ?? ?? 64 A1 00 00 00 00 50 83 EC ?? 53 56 57 A1 ?? ?? ?? ?? 33 C5 50 8D 45 ?? 64 A3 00 00 00 00 89 65 ?? 8B F1 89 75 ?? 8B 4E 18 8B 46 0C 8B 56 08 8B 7D 0C 2B C1 03 CA C7 45 ?? 00 00 00 00 3B C7 73 ?? 68");
+		if (res.VA) {
+			mode = L"GMS v126.1";
 			return aix;
 		}
 	}

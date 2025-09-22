@@ -371,6 +371,31 @@ bool Find_String_IPs(Frost &f, std::vector<AddrInfoEx> &result) {
 		return true;
 	}
 
+	res = f.ScanString("8.31.98.52");
+	if (res.VA) {
+		aix.patch = StrPatchPadding(res, L"127.0.0.1");
+		mode = L"GMS v111.1";
+		result.push_back(aix);
+		is_hit = true;
+		// more
+		res = f.ScanString("8.31.98.53");
+		if (res.VA) {
+			aix.patch = StrPatchPadding(res, L"127.0.0.1");
+			mode = L"GMS v111.1";
+			result.push_back(aix);
+		}
+		res = f.ScanString("8.31.98.54");
+		if (res.VA) {
+			aix.patch = StrPatchPadding(res, L"127.0.0.1");
+			mode = L"GMS v111.1";
+			result.push_back(aix);
+		}
+	}
+
+	if (is_hit) {
+		return true;
+	}
+
 	return false;
 }
 
@@ -516,6 +541,25 @@ AddrInfoEx Find_HackShield_Init(Frost &f) {
 			mode = L"GMS v83.1";
 			return aix;
 		}
+		res = f.AobScan(L"81 EC ?? ?? ?? ?? A1 ?? ?? ?? ?? 33 C4 89 84 24 ?? ?? ?? ?? 56 8B F1 EB 10");
+		if (res.VA) {
+			aix.patch = L"31 C0 C3";
+			mode = L"GMS v95.1";
+			return aix;
+		}
+		res = f.AobScan(L"83 EC 30 A1 ?? ?? ?? ?? 33 C4 89 44 24 2C 56 8B F1 EB 10");
+		if (res.VA) {
+			aix.patch = L"31 C0 C3";
+			mode = L"GMS v111.1";
+			return aix;
+		}
+	}
+
+	res = f.AobScan(L"83 EC ?? A1 ?? ?? ?? ?? 33 C4 89 44 24 ?? 56 6A 00 8B F1 E9");
+	if (res.VA) {
+		aix.patch = L"31 C0 C3";
+		mode = L"GMS v126.1";
+		return aix;
 	}
 
 	return aix;
@@ -724,6 +768,22 @@ AddrInfoEx Find_HackShield_HSUpdate(Frost &f) {
 			mode = L"GMS v83.1";
 			return aix;
 		}
+		res = f.AobScan(L"83 EC 08 56 8B F1 EB 10");
+		if (res.VA) {
+			mode = L"GMS v95.1";
+			return aix;
+		}
+		res = f.AobScan(L"6A FF 68 ?? ?? ?? ?? 64 A1 00 00 00 00 50 81 EC ?? ?? ?? ?? A1 ?? ?? ?? ?? 33 C4 89 84 24 ?? ?? ?? ?? 53 55 56 57 A1 ?? ?? ?? ?? 33 C4 50 8D 84 24 ?? ?? ?? ?? 64 A3 00 00 00 00 8B E9 EB 10");
+		if (res.VA) {
+			mode = L"GMS v111.1";
+			return aix;
+		}
+	}
+
+	res = f.AobScan(L"6A FF 68 ?? ?? ?? ?? 64 A1 00 00 00 00 50 81 EC ?? ?? ?? ?? A1 ?? ?? ?? ?? 33 C4 89 84 24 ?? ?? ?? ?? 53 55 56 57 A1 ?? ?? ?? ?? 33 C4 50 8D 84 24 ?? ?? ?? ?? 64 A3 00 00 00 00 33 DB 53 8B E9");
+	if (res.VA) {
+		mode = L"GMS v126.1";
+		return aix;
 	}
 
 	return aix;
@@ -1035,6 +1095,48 @@ bool Find_Addr_EasyMethod(Frost &f, std::vector<AddrInfoEx> &result) {
 	}
 	return true;
 }
+
+ULONG_PTR uCSecurityClient__ms_pInstance = 0;
+bool HSPtrScanner(Frost &f, ULONG_PTR uVA) {
+	AddrInfo ai = f.GetAddrInfo(uVA + 0x04);
+
+	if (!ai.VA) {
+		return false;
+	}
+
+	if (*(DWORD *)ai.RA == uCSecurityClient__ms_pInstance) {
+		return true;
+	}
+
+	return false;
+}
+
+AddrInfoEx Find_SecurityClient__IsInstantiated(Frost &f) {
+	AddrInfoEx aix = { L"?IsInstantiated@?$TSingleton@VCSecurityClient@@@@SAHXZ" , L"31 C0 C3" };
+	std::wstring &mode = aix.mode;
+	AddrInfo &res = aix.info;
+
+	uCSecurityClient__ms_pInstance = 0;
+	// GMS95, CClientSocket::ProcessPacket inside.
+	AddrInfo res_ptr = f.AobScan(L"8B 0D ?? ?? ?? ?? 85 C9 74 ?? 56 E8 ?? ?? ?? ?? EB ?? 56 8B CB E8");
+	mode = L"GMS v95.1";
+	if (!res_ptr.VA) {
+		// GMS126
+		res_ptr = f.AobScan(L"8B 0D ?? ?? ?? ?? 85 C9 74 ?? 8B 44 24 ?? 50 E8 ?? ?? ?? ?? EB");
+		mode = L"GMS v126.1";
+	}
+	if (res_ptr.VA) {
+		ULONG_PTR addr = f.GetRawAddress(res_ptr.VA + 0x02);
+		uCSecurityClient__ms_pInstance = *(DWORD *)addr;
+		res = f.AobScan(L"33 C0 39 05 ?? ?? ?? ?? 0F 95 C0 C3", HSPtrScanner);
+		if (res.VA) {
+			return aix;
+		}
+	}
+
+	return aix;
+}
+
 AddrInfoEx Find_EasyMethod_Init(Frost &f) {
 	AddrInfoEx aix = { L"EasyMethod_Init (CSecurityClient::IsInstantiated)" , L"31 C0 C3" };
 	std::wstring &mode = aix.mode;
@@ -1052,7 +1154,6 @@ AddrInfoEx Find_EasyMethod_Init(Frost &f) {
 		mode = L"TWMS v??? - XignCode ver broken";
 		return aix;
 	}
-
 	/*
 	res = f.AobScan(L"33 C0 39 ?? ?? ?? ?? ?? 0F 95 C0 C3 CC CC CC CC C7 01 ?? ?? ?? ?? C3");
 	if (res.VA) {
@@ -1671,7 +1772,10 @@ std::vector<AddrInfoEx> Scanner_Main(Frost &f) {
 	}
 	// HackShield Removal Method 1, this was originally written for early post-BB version of JMS/EMS and this also works for KMS.
 	if(is_gameguard_removal_faield) {
+		ADDSCANRESULT(SecurityClient__IsInstantiated);
 		ADDSCANRESULT(HackShield_Init);
+		CheckScanState(is_hackshield_removal_failed);
+		ADDSCANRESULT(HackShield_HSUpdate);
 		CheckScanState(is_hackshield_removal_failed);
 		ADDSCANRESULT(HackShield_EHSvc_Loader_1);
 		CheckScanState(is_hackshield_removal_failed);
@@ -1683,8 +1787,6 @@ std::vector<AddrInfoEx> Scanner_Main(Frost &f) {
 		ADDSCANRESULT(HackShield_Autoup);
 		CheckScanState(is_hackshield_removal_failed);
 		ADDSCANRESULT(HackShield_ASPLunchr);
-		CheckScanState(is_hackshield_removal_failed);
-		ADDSCANRESULT(HackShield_HSUpdate);
 		CheckScanState(is_hackshield_removal_failed);
 		ADDSCANRESULT(HackShield_SetUserIdA); // JMS308+
 	}
